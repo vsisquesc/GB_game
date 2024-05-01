@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "backgroundtileset.h": "c",
+        "backgroundtilemap.h": "c",
+        "gb.h": "c",
+        "bird.h": "c",
+        "stdio.h": "c"
+    }
+}

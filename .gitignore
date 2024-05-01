@@ -1,0 +1,13 @@
+*.gb
+*.ihx
+*.map
+*.noi
+*.asm
+*.cdb
+*.lst
+*.o
+*.sym
+
+
+gbtd22
+gbmb18
