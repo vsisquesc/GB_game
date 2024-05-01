@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:/gbdk/include/**"
+                "D:/gbdk/include/**",
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/src/libs/**"
             ]
         }
     ],

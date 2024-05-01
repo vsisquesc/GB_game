@@ -4,7 +4,8 @@
         {
             "label": "Build ROM",
             "type": "shell",
-            "windows":{"command": "lcc -debug -o build\\game.gb main.c"},
+            // "windows":{"command": "lcc -debug -o build\\game.gb main.c"},
+            "windows":{"command": "./compile.bat"},
             "problemMatcher": ["$msCompile"],
             "group": {
                 "kind": "build",
