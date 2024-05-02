@@ -9,10 +9,15 @@
 //  El offset se debe a que sino se machacan los datos
 //  de fuentes
 
+#define CEILING_POS(X) ((X - (int)(X)) > 0 ? (int)(X + 1) : (int)(X))
+#define CEILING_NEG(X) (int)(X)
+#define CEILING(X) (((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X))
+
 // ============================================
 // ===================WindowTiles==================
 // ============================================
 
+#define SPEED_FACTOR 5
 #define WINDOW_SIZE 11
 unsigned char window_map[] =
     {
@@ -146,6 +151,9 @@ void menu() {
 // =================== Bird ===================
 // ============================================
 
+#define START_X 10
+#define START_Y 100
+
 enum AgentState {
     FALLING,
     RISING,
@@ -159,16 +167,22 @@ struct Agent {
     uint8_t currLoops;
 
     // Speed controllers
-    uint8_t x_speed;
-    uint8_t y_speed;
+    int8_t x_speed;
+    int8_t y_speed;
+    int8_t max_x_speed;
+    int8_t max_y_speed;
+
+    // Acceleration controllers
+    int8_t x_acceleration;
+    int8_t y_acceleration;
 
     // Direction controllers
-    uint8_t x_dir;
-    uint8_t y_dir;
+    int8_t x_dir;
+    int8_t y_dir;
 
     // Position controllers
-    uint8_t x_pos;
-    uint8_t y_pos;
+    int8_t x_pos;
+    int8_t y_pos;
 
     // State
     enum AgentState state;
@@ -176,8 +190,12 @@ struct Agent {
 
 struct Agent bird;
 
-// CONTINUAR CON SALTOS
-
+//@TODO CONTINUAR CON SALTOS
+// Acabar de ver,
+// refactorizar más.
+// Definir velocidades máximas y míimmas en el controlador del pajarín
+// Definir colisión con entorno
+// Abstraer las velocidades del pajarín de las coordenadas de pantalla
 // https://www.youtube.com/watch?v=T6vxF63JJaA&list=PLeEj4c2zF7PaFv5MPYhNAkBGrkx4iPGJo&index=8
 
 void game(uint8_t key) {
@@ -195,28 +213,51 @@ void game(uint8_t key) {
 
     bird.x_dir = 0;
     bird.y_dir = 0;
+    if (bird.state != RISING) {
+        bird.x_speed = 0;
+        bird.y_speed += bird.y_acceleration;
+    }
     if (key) {
+        // Whenever a key is pressed
         // playCrash();
         // playFlap();
     }
     if (key & J_DOWN) {
-        bird.y_dir += bird.y_speed;
+        // Move down
+        bird.y_speed = bird.max_y_speed;
     }
     if (key & J_LEFT) {
-        bird.x_dir -= bird.x_speed;
+        // Move left
+        bird.x_speed = -bird.max_x_speed;
     }
     if (key & J_UP) {
-        bird.y_dir -= bird.y_speed;
+        // Move up
+        bird.y_speed = -bird.max_y_speed;
     }
     if (key & J_RIGHT) {
-        bird.x_dir += bird.x_speed;
+        // Move right
+        bird.x_speed = bird.max_x_speed;
     }
+    if (key & J_A || bird.state == RISING) {
+        if (bird.state != RISING) {
+            bird.state = RISING;
+            bird.y_speed = -bird.max_y_speed;
+        }
+        // Jump
+        bird.y_speed = bird.y_speed + bird.y_acceleration;
+        if (bird.y_speed > 0) {
+            bird.state = FALLING;
+        }
+    }
+
+    bird.x_dir += bird.x_speed;
+    bird.y_dir += bird.y_speed;
 
     bird.x_pos += bird.x_dir;
     bird.y_pos += bird.y_dir;
 
     scroll_sprite(0, bird.x_dir, bird.y_dir);
-    scroll_bkg(bird.x_speed, 0);
+    scroll_bkg(bird.max_x_speed, 0);
 }
 
 // ============================================
@@ -263,17 +304,21 @@ void gameLoop() {
         SHOW_WIN;
         SHOW_BKG;
         move_win(7, 120);
-        move_sprite(0, 88, 78);
+        move_sprite(0, START_X, START_Y);
 
-        bird.nrLoopsPerFrame = 4;
+        bird.nrLoopsPerFrame = CEILING(0.25 * SPEED_FACTOR);
         bird.frameCounter = BIRD_FIRST_ANIMATION_FRAME;
         bird.currLoops = 0;
-        bird.x_speed = 1;
-        bird.y_speed = 1;
+        bird.x_speed = 0;
+        bird.y_speed = 0;
+        bird.max_x_speed = 2 * SPEED_FACTOR;
+        bird.max_y_speed = 2 * SPEED_FACTOR;
+        bird.x_acceleration = 0;
+        bird.y_acceleration = CEILING(0.2 * SPEED_FACTOR);
         bird.x_dir = 0;
         bird.y_dir = 0;
-        bird.x_pos = 88;
-        bird.y_pos = 78;
+        bird.x_pos = START_X;
+        bird.y_pos = START_Y;
         bird.state = FALLING;
 
         state = GAME;
@@ -326,6 +371,8 @@ void main(void) {
     setupMap();
     while (1) {
         gameLoop();
-        vsync();
+        for (int i = 0; i < SPEED_FACTOR; i++) {
+            vsync();
+        }
     }
 }

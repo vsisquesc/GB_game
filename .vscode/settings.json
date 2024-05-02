@@ -4,6 +4,7 @@
         "backgroundtilemap.h": "c",
         "gb.h": "c",
         "bird.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "bird_tiles.h": "c"
     }
 }
