@@ -9,15 +9,30 @@
 //  El offset se debe a que sino se machacan los datos
 //  de fuentes
 
-#define CEILING_POS(X) ((X - (int)(X)) > 0 ? (int)(X + 1) : (int)(X))
-#define CEILING_NEG(X) (int)(X)
-#define CEILING(X) (((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X))
-
 // ============================================
 // ===================WindowTiles==================
 // ============================================
 
-#define SPEED_FACTOR 5
+#define UNITS_PER_PIXEL 8
+
+// @TODO hacer tipo de dato que represente floats
+uint8_t world2screen(int16_t world_coord) {
+    return (uint8_t)(world_coord / UNITS_PER_PIXEL);
+}
+int16_t screen2world(uint8_t screen_cord) {
+    return (int16_t)screen_cord * UNITS_PER_PIXEL;
+}
+
+int16_t clamp(int16_t val, int16_t lower, int16_t upper) {
+    if (val < lower) {
+        return lower;
+    }
+    if (val > upper) {
+        return upper;
+    }
+    return val;
+}
+
 #define WINDOW_SIZE 11
 unsigned char window_map[] =
     {
@@ -151,8 +166,8 @@ void menu() {
 // =================== Bird ===================
 // ============================================
 
-#define START_X 10
-#define START_Y 100
+#define START_X 20
+#define START_Y 70
 
 enum AgentState {
     FALLING,
@@ -167,22 +182,18 @@ struct Agent {
     uint8_t currLoops;
 
     // Speed controllers
-    int8_t x_speed;
-    int8_t y_speed;
-    int8_t max_x_speed;
-    int8_t max_y_speed;
+    int16_t curr_y_speed;
+    int16_t max_y_speed;
+    int16_t max_x_speed;
 
     // Acceleration controllers
-    int8_t x_acceleration;
-    int8_t y_acceleration;
-
-    // Direction controllers
-    int8_t x_dir;
-    int8_t y_dir;
+    int16_t gravity;
+    int16_t curr_boost;
+    int16_t max_boost;
 
     // Position controllers
-    int8_t x_pos;
-    int8_t y_pos;
+    int16_t x_pos;
+    int16_t y_pos;
 
     // State
     enum AgentState state;
@@ -190,7 +201,8 @@ struct Agent {
 
 struct Agent bird;
 
-//@TODO CONTINUAR CON SALTOS
+//@TODO REFACTORIZAR, MEHJORAR CÓDIGO (SE REPITEN ASIGNACIONES)
+// @TODO colisiones, pantalla de listo? puntaición
 // Acabar de ver,
 // refactorizar más.
 // Definir velocidades máximas y míimmas en el controlador del pajarín
@@ -198,8 +210,9 @@ struct Agent bird;
 // Abstraer las velocidades del pajarín de las coordenadas de pantalla
 // https://www.youtube.com/watch?v=T6vxF63JJaA&list=PLeEj4c2zF7PaFv5MPYhNAkBGrkx4iPGJo&index=8
 
-void game(uint8_t key) {
-
+// REFACTORIZAR
+void game(uint8_t key, uint8_t prevKey) {
+    // ANIMATION
     bird.currLoops++;
     if (bird.currLoops == bird.nrLoopsPerFrame) {
         bird.currLoops = 0;
@@ -210,54 +223,49 @@ void game(uint8_t key) {
 
         set_sprite_tile(BIRD_ANIMATION_TILES_BANK, bird.frameCounter + BIRD_OFFSET);
     }
-
-    bird.x_dir = 0;
-    bird.y_dir = 0;
+    // PHYSICS
     if (bird.state != RISING) {
-        bird.x_speed = 0;
-        bird.y_speed += bird.y_acceleration;
+
+        int16_t nextSpeed = bird.curr_y_speed + bird.gravity;
+        bird.curr_y_speed = clamp(nextSpeed, -bird.max_y_speed, bird.max_y_speed);
     }
-    if (key) {
+
+    if (key && prevKey == 0) {
+        bird.state = RISING;
+        bird.curr_y_speed = -bird.max_y_speed;
+    }
+    if (bird.state == RISING) {
         // Whenever a key is pressed
         // playCrash();
         // playFlap();
-    }
-    if (key & J_DOWN) {
-        // Move down
-        bird.y_speed = bird.max_y_speed;
-    }
-    if (key & J_LEFT) {
-        // Move left
-        bird.x_speed = -bird.max_x_speed;
-    }
-    if (key & J_UP) {
-        // Move up
-        bird.y_speed = -bird.max_y_speed;
-    }
-    if (key & J_RIGHT) {
-        // Move right
-        bird.x_speed = bird.max_x_speed;
-    }
-    if (key & J_A || bird.state == RISING) {
-        if (bird.state != RISING) {
-            bird.state = RISING;
-            bird.y_speed = -bird.max_y_speed;
-        }
+
         // Jump
-        bird.y_speed = bird.y_speed + bird.y_acceleration;
-        if (bird.y_speed > 0) {
+        bird.curr_y_speed = bird.curr_y_speed + bird.gravity;
+        if (bird.curr_y_speed > 0) {
             bird.state = FALLING;
         }
     }
+    bird.y_pos += bird.curr_y_speed;
 
-    bird.x_dir += bird.x_speed;
-    bird.y_dir += bird.y_speed;
+    uint8_t ceiling_bound_screen = 10 + BIRD_TILE_SIZE;
+    uint8_t floor_bound_screen = 120 + BIRD_TILE_SIZE;
+    int16_t ceiling_bound_world = screen2world(ceiling_bound_screen);
+    int16_t floor_bound_world = screen2world(floor_bound_screen);
 
-    bird.x_pos += bird.x_dir;
-    bird.y_pos += bird.y_dir;
+    // IF pos > techo
+    if (bird.y_pos < ceiling_bound_world) {
+        bird.y_pos = ceiling_bound_world;
+    }
+    // IF pos < suelo
+    if (bird.y_pos >= floor_bound_world) {
+        bird.y_pos = floor_bound_world;
+        bird.state = DEAD;
+    }
+    uint8_t x_screen = world2screen(bird.x_pos);
+    uint8_t y_screen = clamp(world2screen(bird.y_pos), ceiling_bound_screen, floor_bound_screen);
 
-    scroll_sprite(0, bird.x_dir, bird.y_dir);
-    scroll_bkg(bird.max_x_speed, 0);
+    move_sprite(0, x_screen, y_screen);
+    scroll_bkg(world2screen(bird.max_x_speed), 0);
 }
 
 // ============================================
@@ -281,8 +289,7 @@ enum GameState {
 
 enum GameState state = GAME_SETUP;
 
-void gameLoop() {
-    uint8_t key = joypad();
+void gameLoop(uint8_t key, uint8_t prevKey) {
     switch (state) {
     case MENU:
         /* code */
@@ -303,28 +310,28 @@ void gameLoop() {
         SHOW_SPRITES;
         SHOW_WIN;
         SHOW_BKG;
+
+        int16_t start_x = screen2world(START_X);
+        int16_t start_y = screen2world(START_Y);
+
         move_win(7, 120);
         move_sprite(0, START_X, START_Y);
 
-        bird.nrLoopsPerFrame = CEILING(0.25 * SPEED_FACTOR);
+        bird.nrLoopsPerFrame = 4;
         bird.frameCounter = BIRD_FIRST_ANIMATION_FRAME;
         bird.currLoops = 0;
-        bird.x_speed = 0;
-        bird.y_speed = 0;
-        bird.max_x_speed = 2 * SPEED_FACTOR;
-        bird.max_y_speed = 2 * SPEED_FACTOR;
-        bird.x_acceleration = 0;
-        bird.y_acceleration = CEILING(0.2 * SPEED_FACTOR);
-        bird.x_dir = 0;
-        bird.y_dir = 0;
-        bird.x_pos = START_X;
-        bird.y_pos = START_Y;
+        bird.curr_y_speed = 0;
+        bird.max_y_speed = 30;
+        bird.max_x_speed = 10;
+        bird.gravity = 2;
+        bird.x_pos = start_x;
+        bird.y_pos = start_y;
         bird.state = FALLING;
 
         state = GAME;
         break;
     case GAME:
-        game(key);
+        game(key, prevKey);
 
         if (key & (J_START | J_SELECT)) {
             waitpadup();
@@ -369,10 +376,13 @@ void main(void) {
     font_set(min_font);
 
     setupMap();
+    uint8_t key = joypad();
+    uint8_t prevKey = 0x0;
     while (1) {
-        gameLoop();
-        for (int i = 0; i < SPEED_FACTOR; i++) {
-            vsync();
-        }
+
+        gameLoop(key, prevKey);
+        vsync();
+        prevKey = key;
+        key = joypad();
     }
 }

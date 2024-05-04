@@ -8,4 +8,6 @@ varios modos de juego:
 
     -  flappy bird -> primera iteración
 
-    -  shoot'em up -> v2
+    -  Controles de movimiento normales, van apareciendo plataformas, saltar de una a otra. Scroll infinito. Alterna entre horizontal y vertical, también diagonal -> v2
+
+    -  shoot'em up -> v3
