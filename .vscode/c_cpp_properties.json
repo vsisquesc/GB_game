@@ -6,7 +6,9 @@
                 "${workspaceFolder}/**",
                 "D:/gbdk/include/**",
                 "${workspaceFolder}/src/**",
-                "${workspaceFolder}/src/libs/**"
+                "${workspaceFolder}/src/libs/**",
+                "${workspaceFolder}/src/tiles/**",
+                "${workspaceFolder}/src/maps/**"
             ]
         }
     ],

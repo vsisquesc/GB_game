@@ -5,6 +5,8 @@
         "gb.h": "c",
         "bird.h": "c",
         "stdio.h": "c",
-        "bird_tiles.h": "c"
+        "bird_tiles.h": "c",
+        "bg_map.h": "c",
+        "utils.h": "c"
     }
 }
