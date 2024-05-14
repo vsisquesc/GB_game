@@ -22,9 +22,24 @@
 
 */
 
-
 /* Bank of tiles. */
-#define GateTilesBank 0
+#define GATE_SIZE 8
+#define GATE_TILE_SIZE 8
+#define GATE_TILES_BANK 1
+#define GATE_OFFSET 0x20
+#define GATE_WIDTH 2
+#define GATE_MIN_HEIGHT 1
+
+#define BASE_LEFT 0
+#define SHAFT_LEFT 1
+#define BASE_LEFT_REVERSE 5
+#define BASE_RIGHT_REVERSE 7
+
+#define BASE_RIGHT 2
+#define SHAFT_RIGHT 3
+#define SHAFT_LEFT_REVERSE 4
+#define SHAFT_RIGHT_REVERSE 6
+
 /* Start of tile array. */
 extern unsigned char GateTiles[];
 

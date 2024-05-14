@@ -25,11 +25,10 @@
 /* Bank of tiles. */
 #define BIRD_SIZE 17
 #define BIRD_TILE_SIZE 8
-#define BIRD_ANIMATION_TILES_BANK 0
-#define BIRD_ANIMATION_SIZE 17
+#define BIRD_TILES_BANK 0
 #define BIRD_FIRST_ANIMATION_FRAME 1
 #define BIRD_LAST_ANIMATION_FRAME 16
-#define BIRD_OFFSET 0x20
+#define BIRD_OFFSET 0x00
 /* Start of tile array. */
 extern unsigned char BirdAnimationTiles[];
 

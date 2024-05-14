@@ -4,13 +4,15 @@
 #include <gb/gb.h>
 #include <stdio.h>
 
-struct PlayableAgent init_agent(
+struct PlayableAgent init_playable_agent(
     // Tile set data
     uint8_t sprite_bank_id,
     uint8_t first_animation_frame,
     uint8_t last_animation_frame,
     uint8_t tile_size,
     uint8_t tile_offset,
+    uint8_t tile_set_size,
+    unsigned char tiles[],
     // Animation controllers
     uint8_t nr_loops_per_frame,
 
@@ -29,12 +31,15 @@ struct PlayableAgent init_agent(
     enum PlayableAgentState state) {
     struct PlayableAgent agent;
 
+    set_sprite_data(tile_offset, tile_set_size, tiles);
+
     // Tile set data
     agent.sprite_bank_id = sprite_bank_id;
     agent.first_animation_frame = first_animation_frame;
     agent.last_animation_frame = last_animation_frame;
     agent.tile_size = tile_size;
     agent.tile_offset = tile_offset;
+    agent.tile_set_size = tile_set_size;
 
     // Animation controllers
     agent.nr_loops_per_frame = nr_loops_per_frame;
@@ -60,59 +65,71 @@ struct PlayableAgent init_agent(
     return agent;
 }
 
-struct PlayableAgent update_agent(struct PlayableAgent agent, uint8_t key, uint8_t prevKey) {
+void draw_playable_agent(struct PlayableAgent *agent) {
     // ANIMATION
-    agent.curr_loops++;
-    if (agent.curr_loops == agent.nr_loops_per_frame) {
-        agent.curr_loops = 0;
-        agent.frame_counter++;
-        if (agent.frame_counter > agent.last_animation_frame) {
-            agent.frame_counter = agent.first_animation_frame;
+    agent->curr_loops++;
+    if (agent->curr_loops == agent->nr_loops_per_frame) {
+        agent->curr_loops = 0;
+        agent->frame_counter++;
+        if (agent->frame_counter > agent->last_animation_frame) {
+            agent->frame_counter = agent->first_animation_frame;
         }
 
-        set_sprite_tile(agent.sprite_bank_id, agent.frame_counter + agent.tile_offset);
+        set_sprite_tile(agent->sprite_bank_id, agent->frame_counter + agent->tile_offset);
     }
-    // PHYSICS
-    if (agent.state != RISING) {
 
-        int16_t nextSpeed = agent.curr_y_speed + agent.gravity;
-        agent.curr_y_speed = clamp(nextSpeed, -agent.max_y_speed, agent.max_y_speed);
+    uint8_t x_screen = world2screen(agent->x_pos);
+    uint8_t y_screen = world2screen(agent->y_pos);
+
+    move_sprite(agent->sprite_bank_id, x_screen, y_screen);
+}
+
+//@TODO REFACTORIZAR, MEHJORAR CÓDIGO (SE REPITEN ASIGNACIONES)
+// @TODO colisiones, pantalla de listo? puntaición
+// Acabar de ver,
+// refactorizar más.
+// Definir colisión con entorno
+// https://www.youtube.com/watch?v=T6vxF63JJaA&list=PLeEj4c2zF7PaFv5MPYhNAkBGrkx4iPGJo&index=8
+
+// REFACTORIZAR
+void update_playable_agent(struct PlayableAgent *agent, uint8_t key, uint8_t prevKey) {
+
+    // PHYSICS
+    if (agent->state != RISING) {
+
+        int16_t nextSpeed = agent->curr_y_speed + agent->gravity;
+        agent->curr_y_speed = clamp(nextSpeed, -agent->max_y_speed, agent->max_y_speed);
     }
 
     if (key && prevKey == 0) {
-        agent.state = RISING;
-        agent.curr_y_speed = -agent.max_y_speed;
+        agent->state = RISING;
+        agent->curr_y_speed = -agent->max_y_speed;
         playFlap();
     }
-    if (agent.state == RISING) {
+    if (agent->state == RISING) {
         // Whenever a key is pressed
         // playCrash();
 
         // Jump
-        agent.curr_y_speed = agent.curr_y_speed + agent.gravity;
-        if (agent.curr_y_speed > 0) {
-            agent.state = FALLING;
+        agent->curr_y_speed = agent->curr_y_speed + agent->gravity;
+        if (agent->curr_y_speed > 0) {
+            agent->state = FALLING;
         }
     }
-    agent.y_pos += agent.curr_y_speed;
+    agent->y_pos += agent->curr_y_speed;
 
-    uint8_t ceiling_bound_screen = 10 + agent.tile_size;
-    uint8_t floor_bound_screen = 120 + agent.tile_size;
+    uint8_t ceiling_bound_screen = 4 * agent->tile_size;
+    uint8_t floor_bound_screen = 120 + agent->tile_size;
     int16_t ceiling_bound_world = screen2world(ceiling_bound_screen);
     int16_t floor_bound_world = screen2world(floor_bound_screen);
 
     // IF pos > techo
-    if (agent.y_pos < ceiling_bound_world) {
-        agent.y_pos = ceiling_bound_world;
+    if (agent->y_pos < ceiling_bound_world) {
+        agent->y_pos = ceiling_bound_world;
     }
     // IF pos < suelo
-    if (agent.y_pos >= floor_bound_world) {
-        agent.y_pos = floor_bound_world;
-        agent.state = DEAD;
+    if (agent->y_pos >= floor_bound_world) {
+        agent->y_pos = floor_bound_world;
+        agent->state = DEAD;
     }
-    uint8_t x_screen = world2screen(agent.x_pos);
-    uint8_t y_screen = clamp(world2screen(agent.y_pos), ceiling_bound_screen, floor_bound_screen);
-
-    move_sprite(agent.sprite_bank_id, x_screen, y_screen);
-    return agent;
 }

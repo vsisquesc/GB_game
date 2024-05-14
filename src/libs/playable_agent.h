@@ -14,6 +14,7 @@ extern struct PlayableAgent {
     uint8_t last_animation_frame;
     uint8_t tile_size;
     uint8_t tile_offset;
+    uint8_t tile_set_size;
 
     // Animation controllers
     uint8_t nr_loops_per_frame;
@@ -35,13 +36,15 @@ extern struct PlayableAgent {
     // State
     enum PlayableAgentState state;
 };
-extern struct PlayableAgent init_agent(
+extern struct PlayableAgent init_playable_agent(
     // Tile set data
     uint8_t sprite_bank_id,
     uint8_t first_animation_frame,
     uint8_t last_animation_frame,
     uint8_t tile_size,
     uint8_t tile_offset,
+    uint8_t tile_set_size,
+    unsigned char tiles[],
     // Animation controllers
     uint8_t nr_loops_per_frame,
 
@@ -58,4 +61,5 @@ extern struct PlayableAgent init_agent(
 
     // State
     enum PlayableAgentState state);
-extern struct PlayableAgent update_agent(struct PlayableAgent el, uint8_t key, uint8_t prevKey);
+extern void draw_playable_agent(struct PlayableAgent *agent);
+extern void update_playable_agent(struct PlayableAgent *agent, uint8_t key, uint8_t prevKey);

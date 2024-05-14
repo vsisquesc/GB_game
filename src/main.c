@@ -3,12 +3,13 @@
 #include <stdio.h>
 
 #include "libs/audio.h"
-#include "libs/obstacle.h"
+#include "libs/obstacle_agent.h"
 #include "libs/playable_agent.h"
 #include "libs/utils.h"
 #include "maps/bg_map.h"
 #include "tiles/bg_tiles.h"
 #include "tiles/bird_tiles.h"
+#include "tiles/gate_tiles.h"
 //  Direccion de los tiles en los que empieza cada tileset
 //  El offset se debe a que sino se machacan los datos
 //  de fuentes
@@ -51,18 +52,11 @@ void menu() {
 struct ObstacleAgent obstacle;
 struct PlayableAgent bird;
 
-//@TODO REFACTORIZAR, MEHJORAR CÓDIGO (SE REPITEN ASIGNACIONES)
-// @TODO colisiones, pantalla de listo? puntaición
-// Acabar de ver,
-// refactorizar más.
-// Definir velocidades máximas y míimmas en el controlador del pajarín
-// Definir colisión con entorno
-// Abstraer las velocidades del pajarín de las coordenadas de pantalla
-// https://www.youtube.com/watch?v=T6vxF63JJaA&list=PLeEj4c2zF7PaFv5MPYhNAkBGrkx4iPGJo&index=8
-
-// REFACTORIZAR
 void game(uint8_t key, uint8_t prevKey) {
-    bird = update_agent(bird, key, prevKey);
+    update_playable_agent(&bird, key, prevKey);
+    draw_playable_agent(&bird);
+    update_obstacle_agent(&obstacle);
+    draw_obstacle_agent(&obstacle);
     scroll_bkg(world2screen(bird.max_x_speed), 0);
 }
 
@@ -98,7 +92,6 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
         }
         break;
     case GAME_SETUP:
-        set_sprite_data(BIRD_OFFSET, BIRD_ANIMATION_SIZE, BirdAnimationTiles);
 
         set_bkg_data(MAP_OFFSET, BG_SIZE, bg_tiles);
         set_bkg_tiles(0, 0, BG_MAP_WIDTH, BG_MAP_HEIGHT, bg_map);
@@ -114,12 +107,14 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
         int16_t start_x = screen2world(START_X);
         int16_t start_y = screen2world(START_Y);
 
-        bird = init_agent(
-            BIRD_ANIMATION_TILES_BANK,
+        bird = init_playable_agent(
+            BIRD_TILES_BANK,
             BIRD_FIRST_ANIMATION_FRAME,
             BIRD_LAST_ANIMATION_FRAME,
             BIRD_TILE_SIZE,
             BIRD_OFFSET,
+            BIRD_SIZE,
+            BirdAnimationTiles,
             4,  /* LOOPS PER FRAME*/
             10, /* MAX X SPEED */
             20, /* MAX Y SPEED */
@@ -128,21 +123,17 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
             start_y,
             FALLING);
 
-        obstacle.x_pos = 80;
-        obstacle.y_pos = 100;
-
-        set_sprite_tile(0, 0);
-        obstacle.sprites_head[0] = 0;
-
-        set_sprite_tile(1, 1);
-        obstacle.sprites_head[1] = 1;
-
-        set_sprite_tile(2, 2);
-        obstacle.sprites_base[0] = 2;
-
-        set_sprite_tile(3, 3);
-        obstacle.sprites_base[1] = 3;
-
+        obstacle = init_obstacle_agent(
+            GATE_TILES_BANK,
+            GATE_TILE_SIZE,
+            GATE_OFFSET,
+            GATE_SIZE,
+            GateTiles,
+            screen2world(100), /* POS X IN WORLD */
+            8,                 /* X SPEED */
+            4,                 /* HEIGHT */
+            TRUE,
+            GATE_WIDTH);
         state = GAME;
         break;
     case GAME:

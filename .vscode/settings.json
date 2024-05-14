@@ -9,6 +9,7 @@
         "bg_map.h": "c",
         "utils.h": "c",
         "playableagent.h": "c",
-        "playable_agent.h": "c"
+        "playable_agent.h": "c",
+        "obstacle_agent.h": "c"
     }
 }
