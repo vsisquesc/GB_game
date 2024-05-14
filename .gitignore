@@ -3,6 +3,7 @@
 *.map
 *.noi
 *.asm
+*.adb
 *.cdb
 *.lst
 *.o

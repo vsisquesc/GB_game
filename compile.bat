@@ -6,4 +6,5 @@ lcc  -debug  -v      -c -o obj\bg_tiles.o src\tiles\bg_tiles.c
 lcc  -debug  -v      -c -o obj\bird_tiles.o src\tiles\bird_tiles.c
 lcc  -debug  -v      -c -o obj\utils.o src\libs\utils.c
 lcc  -debug  -v      -c -o obj\audio.o src\libs\audio.c
-lcc  -debug  -v      -o obj\main.gb obj\main.o obj\bg_map.o obj\bg_tiles.o obj\bird_tiles.o  obj\utils.o obj\audio.o 
+lcc  -debug  -v      -c -o obj\playable_agent.o src\libs\playable_agent.c
+lcc  -debug  -v      -o obj\main.gb obj\main.o obj\bg_map.o obj\bg_tiles.o obj\bird_tiles.o  obj\utils.o obj\audio.o obj\playable_agent.o

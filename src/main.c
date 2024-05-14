@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 #include "libs/audio.h"
-#include "libs/bird.h"
 #include "libs/obstacle.h"
+#include "libs/playable_agent.h"
 #include "libs/utils.h"
 #include "maps/bg_map.h"
 #include "tiles/bg_tiles.h"
@@ -62,59 +62,7 @@ struct PlayableAgent bird;
 
 // REFACTORIZAR
 void game(uint8_t key, uint8_t prevKey) {
-    // ANIMATION
-    bird.currLoops++;
-    if (bird.currLoops == bird.nrLoopsPerFrame) {
-        bird.currLoops = 0;
-        bird.frameCounter++;
-        if (bird.frameCounter > BIRD_LAST_ANIMATION_FRAME) {
-            bird.frameCounter = BIRD_FIRST_ANIMATION_FRAME;
-        }
-
-        set_sprite_tile(BIRD_ANIMATION_TILES_BANK, bird.frameCounter + BIRD_OFFSET);
-    }
-    // PHYSICS
-    if (bird.state != RISING) {
-
-        int16_t nextSpeed = bird.curr_y_speed + bird.gravity;
-        bird.curr_y_speed = clamp(nextSpeed, -bird.max_y_speed, bird.max_y_speed);
-    }
-
-    if (key && prevKey == 0) {
-        bird.state = RISING;
-        bird.curr_y_speed = -bird.max_y_speed;
-        playFlap();
-    }
-    if (bird.state == RISING) {
-        // Whenever a key is pressed
-        // playCrash();
-
-        // Jump
-        bird.curr_y_speed = bird.curr_y_speed + bird.gravity;
-        if (bird.curr_y_speed > 0) {
-            bird.state = FALLING;
-        }
-    }
-    bird.y_pos += bird.curr_y_speed;
-
-    uint8_t ceiling_bound_screen = 10 + BIRD_TILE_SIZE;
-    uint8_t floor_bound_screen = 120 + BIRD_TILE_SIZE;
-    int16_t ceiling_bound_world = screen2world(ceiling_bound_screen);
-    int16_t floor_bound_world = screen2world(floor_bound_screen);
-
-    // IF pos > techo
-    if (bird.y_pos < ceiling_bound_world) {
-        bird.y_pos = ceiling_bound_world;
-    }
-    // IF pos < suelo
-    if (bird.y_pos >= floor_bound_world) {
-        bird.y_pos = floor_bound_world;
-        bird.state = DEAD;
-    }
-    uint8_t x_screen = world2screen(bird.x_pos);
-    uint8_t y_screen = clamp(world2screen(bird.y_pos), ceiling_bound_screen, floor_bound_screen);
-
-    move_sprite(0, x_screen, y_screen);
+    bird = update_agent(bird, key, prevKey);
     scroll_bkg(world2screen(bird.max_x_speed), 0);
 }
 
@@ -161,22 +109,24 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
         SHOW_WIN;
         SHOW_BKG;
 
+        move_win(7, 120);
+
         int16_t start_x = screen2world(START_X);
         int16_t start_y = screen2world(START_Y);
 
-        move_win(7, 120);
-        move_sprite(0, START_X, START_Y);
-
-        bird.nrLoopsPerFrame = 4;
-        bird.frameCounter = BIRD_FIRST_ANIMATION_FRAME;
-        bird.currLoops = 0;
-        bird.curr_y_speed = 0;
-        bird.max_y_speed = 30;
-        bird.max_x_speed = 10;
-        bird.gravity = 2;
-        bird.x_pos = start_x;
-        bird.y_pos = start_y;
-        bird.state = FALLING;
+        bird = init_agent(
+            BIRD_ANIMATION_TILES_BANK,
+            BIRD_FIRST_ANIMATION_FRAME,
+            BIRD_LAST_ANIMATION_FRAME,
+            BIRD_TILE_SIZE,
+            BIRD_OFFSET,
+            4,  /* LOOPS PER FRAME*/
+            10, /* MAX X SPEED */
+            20, /* MAX Y SPEED */
+            1,  /* GRAVITY */
+            start_x,
+            start_y,
+            FALLING);
 
         obstacle.x_pos = 80;
         obstacle.y_pos = 100;
