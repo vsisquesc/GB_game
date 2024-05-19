@@ -1,3 +1,6 @@
+#ifndef PLAYABLE_AGENT_H
+#define PLAYABLE_AGENT_H
+#include "bbox.h"
 #include <gb/gb.h>
 #include <stdio.h>
 
@@ -33,6 +36,7 @@ extern struct PlayableAgent {
     int16_t x_pos;
     int16_t y_pos;
 
+    struct BoundingBox hitbox;
     // State
     enum PlayableAgentState state;
 };
@@ -63,3 +67,6 @@ extern struct PlayableAgent init_playable_agent(
     enum PlayableAgentState state);
 extern void draw_playable_agent(struct PlayableAgent *agent);
 extern void update_playable_agent(struct PlayableAgent *agent, uint8_t key, uint8_t prevKey);
+extern void setState(struct PlayableAgent *agent, enum PlayableAgentState state);
+
+#endif /*PLAYABLE_AGENT_H*/

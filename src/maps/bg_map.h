@@ -1,3 +1,5 @@
+#ifndef BG_MAP_H
+#define BG_MAP_H
 /*
 
  BG_MAP.H
@@ -27,3 +29,5 @@ extern unsigned char bg_map[];
 extern void setupMap();
 
 /* End of BG_MAP.H */
+
+#endif /*BG_MAP_H*/

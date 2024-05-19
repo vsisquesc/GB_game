@@ -61,6 +61,13 @@ struct PlayableAgent init_playable_agent(
     // State
     agent.state = state;
 
+    int16_t x_left = x_pos;
+    int16_t y_top = y_pos;
+    int16_t width = screen2world(agent.tile_size);
+    int16_t heigth = screen2world(agent.tile_size);
+
+    agent.hitbox = init_bbox(x_left, y_top, width, heigth);
+
     move_sprite(sprite_bank_id, x_pos, y_pos);
     return agent;
 }
@@ -118,8 +125,8 @@ void update_playable_agent(struct PlayableAgent *agent, uint8_t key, uint8_t pre
     }
     agent->y_pos += agent->curr_y_speed;
 
-    uint8_t ceiling_bound_screen = 4 * agent->tile_size;
-    uint8_t floor_bound_screen = 120 + agent->tile_size;
+    uint8_t ceiling_bound_screen = CEIL;
+    uint8_t floor_bound_screen = FLOOR;
     int16_t ceiling_bound_world = screen2world(ceiling_bound_screen);
     int16_t floor_bound_world = screen2world(floor_bound_screen);
 
@@ -132,4 +139,11 @@ void update_playable_agent(struct PlayableAgent *agent, uint8_t key, uint8_t pre
         agent->y_pos = floor_bound_world;
         agent->state = DEAD;
     }
+    int16_t new_x = agent->x_pos;
+    int16_t new_y = agent->y_pos;
+    update_bbox(&agent->hitbox, new_x, new_y);
+}
+
+extern void setState(struct PlayableAgent *agent, enum PlayableAgentState state) {
+    agent->state = state;
 }

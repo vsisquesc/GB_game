@@ -1,3 +1,5 @@
+#ifndef GATE_TILES_H
+#define GATE_TILES_H
 /*
 
  GATE_TILES.H
@@ -44,3 +46,4 @@
 extern unsigned char GateTiles[];
 
 /* End of GATE_TILES.H */
+#endif /*GATE_TILES_H*/

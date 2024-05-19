@@ -46,6 +46,15 @@ void menu() {
 // =================== Bird ===================
 // ============================================
 
+enum GameState {
+    MENU,
+    GAME_SETUP,
+    GAME,
+    PAUSE
+};
+// Más factorizado
+enum GameState state = GAME_SETUP;
+
 #define START_X 20
 #define START_Y 70
 
@@ -58,6 +67,15 @@ void game(uint8_t key, uint8_t prevKey) {
     update_obstacle_agent(&obstacle);
     draw_obstacle_agent(&obstacle);
     scroll_bkg(world2screen(bird.max_x_speed), 0);
+
+    if (check_collision(bird.hitbox, obstacle.hitbox)) {
+        setState(&bird, DEAD);
+    }
+
+    if (bird.state == DEAD) {
+        playCrash();
+        state = MENU;
+    }
 }
 
 // ============================================
@@ -71,15 +89,6 @@ void pause() {
 // ============================================
 // ================= GameLoop =================
 // ============================================
-
-enum GameState {
-    MENU,
-    GAME_SETUP,
-    GAME,
-    PAUSE
-};
-// Más factorizado
-enum GameState state = GAME_SETUP;
 
 void gameLoop(uint8_t key, uint8_t prevKey) {
     switch (state) {
@@ -102,7 +111,7 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
         SHOW_WIN;
         SHOW_BKG;
 
-        move_win(7, 120);
+        move_win(7, FLOOR - TILE_SIZE);
 
         int16_t start_x = screen2world(START_X);
         int16_t start_y = screen2world(START_Y);
@@ -132,7 +141,7 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
             screen2world(100), /* POS X IN WORLD */
             8,                 /* X SPEED */
             4,                 /* HEIGHT */
-            TRUE,
+            TRUE,              /* REVERSED  */
             GATE_WIDTH);
         state = GAME;
         break;
@@ -147,7 +156,6 @@ void gameLoop(uint8_t key, uint8_t prevKey) {
     case PAUSE:
         pause();
         if (key & J_A) {
-
             waitpadup();
             state = MENU;
         }

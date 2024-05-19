@@ -34,16 +34,24 @@ extern struct ObstacleAgent init_obstacle_agent(
     agent.reverse = reverse;
     agent.width_in_tiles = width_in_tiles;
 
+    agent.ceiling_bound_screen = CEIL;
+    agent.floor_bound_screen = FLOOR;
+
+    int16_t x_left = x_pos;
+    int16_t y_top = reverse ? screen2world(agent.ceiling_bound_screen) : screen2world(agent.floor_bound_screen) - agent.height_in_tiles * screen2world(agent.tile_size);
+    int16_t width = agent.width_in_tiles * screen2world(agent.tile_size);
+    int16_t height = agent.height_in_tiles * screen2world(agent.tile_size);
+
+    agent.hitbox = init_bbox(x_left, y_top, width, height);
+
     return agent;
 }
 
 extern void draw_obstacle_agent(struct ObstacleAgent *agent) {
-    uint8_t ceiling_bound_screen = 2 * agent->tile_size;
-    uint8_t floor_bound_screen = 120 + agent->tile_size;
 
     uint8_t nr_tiles = agent->height_in_tiles * agent->width_in_tiles;
     uint8_t x_screen = world2screen(agent->x_pos);
-    uint8_t y_screen = agent->reverse ? ceiling_bound_screen : floor_bound_screen - (agent->height_in_tiles - 1) * agent->tile_size;
+    uint8_t y_screen = agent->reverse ? agent->ceiling_bound_screen : agent->floor_bound_screen - (agent->height_in_tiles - 1) * agent->tile_size;
 
     for (uint8_t i = 0; i < nr_tiles; i++) {
         uint8_t tile_position = agent->reverse ? nr_tiles - i - 1 : i;
@@ -67,6 +75,8 @@ extern void draw_obstacle_agent(struct ObstacleAgent *agent) {
     }
 }
 extern void update_obstacle_agent(struct ObstacleAgent *agent) {
-    // @TODO VA A GOLPES
     agent->x_pos -= agent->x_speed;
+    int16_t new_x = agent->x_pos;
+    int16_t new_y = agent->hitbox.y_top;
+    update_bbox(&agent->hitbox, new_x, new_y);
 }

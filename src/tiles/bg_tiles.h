@@ -1,3 +1,5 @@
+#ifndef BG_TILES_H
+#define BG_TILES_H
 /*
 
  bg_TILES.H
@@ -29,3 +31,5 @@
 extern unsigned char bg_tiles[];
 
 /* End of bg_TILES.H */
+
+#endif /*BG_TILES_H*/

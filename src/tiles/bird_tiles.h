@@ -1,3 +1,5 @@
+#ifndef BIRD_TILES_H
+#define BIRD_TILES_H
 /*
 
  BIRD.H
@@ -33,3 +35,4 @@
 extern unsigned char BirdAnimationTiles[];
 
 /* End of BIRD.H */
+#endif /*BIRD_TILES_H*/
